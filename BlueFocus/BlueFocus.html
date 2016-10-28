@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>BlueFocus</title>
+    <style>
+        html,body,div,ul,li,button{
+            margin: 0;
+            padding: 0;
+        }
+        body{
+            background-color: #f0f0f0;
+        }
+        ul,li{
+            list-style-type: none;
+        }
+        img{
+            border: 0;
+        }
+        .clearfix:after{
+            content: '';
+            display: block;
+            clear: both;
+        }
+
+        /*三层盒子结构*/
+        /*最外层盒子，相当于相框*/
+        #banner{
+            width: 600px;
+            height: 400px;
+            overflow: hidden;
+            margin: 50px auto;
+            position: relative;
+        }
+        /*第二层盒子，长条装所有图片的盒子，主要移动的就是他left*/
+        #banner_list{
+            /*图片总宽度=个数x单个宽*/
+            /*width: 2400px;*/
+            height: 400px;
+            position: absolute;
+            left: 0;
+            /*left: -1400px;*/
+        }
+        /*第三层盒子，装每个图片的盒子*/
+        #banner_list li{
+            width: 600px;
+            height: 400px;
+            float: left;
+        }
+        /*让图片铺开整个li*/
+        #banner_list li img{
+            width:100%;
+            height: 100%;
+        }
+        /*小点点 不定宽度，水平居中*/
+        #point{
+            width: 600px;
+            margin: 0 auto;
+            position: relative;
+            top: -100px;
+        }
+        #point_group{
+            /*小点点的总宽度=个数x单个宽*/
+            /*width: 120px;*/
+            margin: 0 auto;
+        }
+        #point_group li{
+            width:10px;
+            height: 10px;
+            border-radius: 5px;
+            float: left;
+            margin: 20px 10px;
+            background-color: #ccc;
+            cursor: pointer;
+        }
+        #point .active{
+            background-color: orange;
+        }
+    </style>
+    <script>
+        window.onload = function(){
+            init();
+            auto();
+            allClear();
+            pointClick();
+        };
+
+        var iNow = 0;//代表当前是第几张图片
+        var iLeft = 0;
+        var oTimer = null;//定时器
+        function next(){
+            var oUl = document.getElementById("banner_list");//要移动的盒子ul
+            var aLi = document.getElementsByClassName("banner_li");//每个图片盒子li
+            var iWidth = aLi[0].offsetWidth;//每个图片的宽度
+            var aPoint = document.getElementsByClassName("point_li");
+
+            if(iNow == aLi.length-1){//当下一页没有图片了
+                iNow = 0;//回到第一页
+                aPoint[0].className += ' active';
+                var cName2 = aPoint[aLi.length-1].className;
+                aPoint[aLi.length-1].className = cName2.replace(' active','');
+                var Interval = setInterval(function(){
+                    iLeft += 50;
+                    oUl.style.left = iLeft + 'px';
+                    if(iLeft == 0){
+                        clearInterval(Interval);
+                    }
+                },10);
+            }else {
+                iNow++;//翻到下一页
+                var cName = aPoint[iNow-1].className;
+                aPoint[iNow-1].className = cName.replace(' active','');
+                aPoint[iNow].className += ' active';
+                var aInterval = setInterval(function(){
+                    iLeft -= 10;
+                    oUl.style.left = iLeft + 'px';
+                    if(iLeft == -iWidth*iNow){
+                        clearInterval(aInterval);
+                    }
+                },10);
+            }
+        }
+
+        //自动播放
+        function auto(){
+            oTimer = setInterval(function(){
+                next();
+            },3000);
+        }
+
+        //停止动画
+        function allClearObj(obj){
+            obj.onmouseover = function(){//鼠标移入
+                //停止动画
+                clearAuto();
+            };
+            obj.onmouseout = function(){//鼠标移除
+                //执行动画
+                auto();
+            };
+        }
+        function allClear(){
+            var banner = document.getElementById("banner");
+            var point = document.getElementById("point");
+
+            allClearObj(banner);
+            allClearObj(point);
+        }
+        //清除定时器
+        function clearAuto(){
+            clearInterval(oTimer);
+            oTimer = null;
+        }
+
+        //给点点加事件
+        function pointClick(){
+            var oUl = document.getElementById("banner_list");//要移动的盒子ul
+            var aLi = document.getElementsByClassName("banner_li");//每个图片盒子li
+            var iWidth = aLi[0].offsetWidth;//每个图片的宽度
+            var aPoint = document.getElementsByClassName("point_li");
+
+            for( var i=0; i<aPoint.length; i++ ) {
+                aPoint[i].i = i;
+                aPoint[i].onclick = function() {
+                    if(iNow < this.i){
+                        iNow = this.i;
+                        var nInterval = setInterval(function(){
+                            iLeft -= 40;
+                            oUl.style.left = iLeft + 'px';
+                            if(iLeft == -iWidth*iNow){
+                                clearInterval(nInterval);
+                            }
+                        },10);
+                    }else if(iNow > this.i){
+                        iNow = this.i;
+                        var pInterval = setInterval(function(){
+                            iLeft += 40;
+                            oUl.style.left = iLeft + 'px';
+                            if(iLeft == -iWidth*iNow){
+                                clearInterval(pInterval);
+                            }
+                        },10);
+                    }
+
+
+                    for( var j=0; j<aPoint.length; j++ ) {
+                        var cName = aPoint[j].className;
+                        var bool = cName.indexOf('active');
+                        if (bool > 0) {
+                            aPoint[j].className = cName.replace(' active', '');
+                        }
+                    }
+                    aPoint[iNow].className += ' active';
+                };
+            }
+        }
+
+        //初始化
+        function init(){
+            var oUl = document.getElementById("banner_list");//要移动的盒子ul
+            var aLi = document.getElementsByClassName("banner_li");//每个图片盒子li
+            var iWidth = aLi[0].offsetWidth;//每个图片的宽度
+            var pUl = document.getElementById("point_group");
+            var aPoint = document.getElementsByClassName("point_li");
+            var pWidth = aPoint[0].offsetWidth + 20;//每个图片的宽度
+
+            oUl.style.left = 0;
+            //初始化#banner_list的宽=单个宽X个数
+            oUl.style.width = iWidth * aLi.length + 'px';
+            //初始化#banner_list的宽=单个宽X个数
+            pUl.style.width = pWidth * aPoint.length + 'px';
+        }
+
+    </script>
+</head>
+<body>
+<div id="banner">
+    <ul id="banner_list" class="clearfix">
+        <li class="banner_li"><img src="images/1.jpg"></li>
+        <li class="banner_li"><img src="images/2.jpg"></li>
+        <li class="banner_li"><img src="images/3.jpg"></li>
+        <li class="banner_li"><img src="images/4.jpg"></li>
+        <li class="banner_li"><img src="images/5.jpg"></li>
+        <li class="banner_li"><img src="images/6.jpg"></li>
+        <li class="banner_li"><img src="images/7.jpg"></li>
+        <li class="banner_li"><img src="images/8.jpg"></li>
+    </ul>
+</div>
+<div id="point">
+    <ul id="point_group" class="clearfix">
+        <li class="point_li active"></li>
+        <li class="point_li"></li>
+        <li class="point_li"></li>
+        <li class="point_li"></li>
+        <li class="point_li"></li>
+        <li class="point_li"></li>
+        <li class="point_li"></li>
+        <li class="point_li"></li>
+    </ul>
+</div>
+</body>
+</html>
